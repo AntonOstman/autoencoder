@@ -2,6 +2,7 @@ import torch
 import os
 import cv2 as cv
 import numpy as np
+from torch.func import debug_unwrap
 
 folder = "Cat"
 # folder = "Dog"
@@ -10,14 +11,16 @@ processed_path = f"data/Processed/{folder}"
 in_size = 80
 num_data = 8000
 
+device = torch.device('cuda')
+
 class Autoencoder(torch.nn.Module):
 
     def __init__(self):
         super(Autoencoder, self).__init__()
 
         encoding_dim = 20
-        self.encoder = torch.nn.Linear(in_size * in_size, encoding_dim * encoding_dim); 
-        self.decoder = torch.nn.Linear(encoding_dim * encoding_dim, in_size * in_size); 
+        self.encoder = torch.nn.Linear(in_size * in_size, encoding_dim * encoding_dim).to(device); 
+        self.decoder = torch.nn.Linear(encoding_dim * encoding_dim, in_size * in_size).to(device);
 
     def forward(self, x):
 
@@ -37,16 +40,20 @@ def get_data_indices() -> np.ndarray:
     
     return np.array(indices)
 
+data_cache = {}
+
 def data_loader(indices) -> torch.Tensor | None:
 
     batches = len(indices)
-    grayImages = torch.zeros(batches, in_size*in_size)
-    success = 0
-    fails = 0
+    grayImages = torch.zeros(batches, in_size*in_size).to(device)
 
-    for i in indices:
+    for i,file_idx in enumerate(indices):
 
-        path = f"{processed_path}/{i}.jpg"
+        if file_idx in data_cache:
+            grayImages[i, :] = data_cache[file_idx]
+            continue
+
+        path = f"{processed_path}/{file_idx}.jpg"
 
         im = cv.imread(path)
         assert im is not None, f"File {path} does not exist"
@@ -54,11 +61,10 @@ def data_loader(indices) -> torch.Tensor | None:
         grayImage = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
         assert grayImage.shape == (in_size, in_size), f"expected shape [{in_size}, {in_size}] got {grayImage.shape}"
 
-        grayImage = torch.flatten(torch.Tensor(grayImage))
-        grayImages[success, :] = grayImage
-        success += 1
+        grayImage = torch.flatten(torch.Tensor(grayImage)).to(device)
 
-    assert success == batches
+        grayImages[i, :] = grayImage
+        data_cache[file_idx] = grayImage
 
     return grayImages
 
