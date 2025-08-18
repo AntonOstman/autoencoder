@@ -41,15 +41,19 @@ def get_data_indices() -> np.ndarray:
     return np.array(indices)
 
 data_cache = {}
+batch_cache = {}
 
-def data_loader(indices) -> torch.Tensor | None:
+def data_loader(indices, batch_idx = None, use_data_cache = False) -> torch.Tensor | None:
 
     batches = len(indices)
     grayImages = torch.zeros(batches, in_size*in_size).to(device)
 
+    if batch_idx in batch_cache and batch_idx is not None:
+        return batch_cache[batch_idx]
+
     for i,file_idx in enumerate(indices):
 
-        if file_idx in data_cache:
+        if file_idx in data_cache and use_data_cache:
             grayImages[i, :] = data_cache[file_idx]
             continue
 
@@ -66,13 +70,16 @@ def data_loader(indices) -> torch.Tensor | None:
         grayImages[i, :] = grayImage
         data_cache[file_idx] = grayImage
 
+    if batch_idx is not None:
+        batch_cache[batch_idx] = grayImages
+
     return grayImages
 
 def train(model):
-    loss_fn = torch.nn.MSELoss()
+    loss_fn = torch.nn.MSELoss().to(device)
     optim = torch.optim.AdamW(model.parameters(), lr=0.00001)
 
-    epochs = 500
+    epochs = 1000
     indices = get_data_indices()
     real_num_data = indices.shape[0]
 
@@ -90,7 +97,7 @@ def train(model):
 
             cur_indices = train_indices[j:j+batch_size]
 
-            data = data_loader(cur_indices)
+            data = data_loader(cur_indices, batch_idx = j)
 
             if data is None:
                 break
@@ -106,7 +113,7 @@ def train(model):
             optim.step()
 
 
-        valid_data = data_loader(validate_indices)
+        valid_data = data_loader(validate_indices, batch_idx = 'validate')
         out = model(valid_data)
         loss = loss_fn(out, valid_data)
 
