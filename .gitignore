@@ -2,3 +2,4 @@ data/
 .bashrc
 .ignore
 .venv/
+*.pth
