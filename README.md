@@ -1,7 +1,7 @@
 
 # Autoencoder test
 
-Playing around with autoencoders to see which gives the best representation
+Playing around with autoencoders to see the descriptive power of the latent space.
 
 For this simple test case the linear model seems to perform visually best.
 
@@ -11,7 +11,7 @@ Linear autoencoder
 
 Non linear autoencoder with relu on encoder and sigmoid on decoder
 
-Non linear autoencoder with relu on encode and decode with various hidden layers
+Non linear autoencoder with relu on encode and decode, furthermore some different hidden layers are used. 
 
 
 ## Results
@@ -32,7 +32,7 @@ Upsampled encoded space, reconstruced image and original image
     <td><img src="results/models/lr0.001nonlinearv2/validation_loss_curve.png" width="166"/></td>
   </div>
 
-  <p>The linear and first non linear remains stable, the nonlinearv2 starts overfitting</p>
+  <p>The linear and first nonlinear remains stable, the nonlinearv2 starts overfitting</p>
 </div>
 
 # Dataset:
@@ -43,4 +43,4 @@ Upsampled encoded space, reconstruced image and original image
 
 Create a venv and install torch, opencv, numpy
 
-Download the dataset and populate the project folders
+Download the dataset and populate the data folder.
